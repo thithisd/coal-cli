@@ -239,7 +239,6 @@ impl Miner {
             }
         }
     }
-}
     // TODO
     fn _simulate(&self) {
 
