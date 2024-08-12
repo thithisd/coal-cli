@@ -45,7 +45,6 @@ impl Miner {
         ixs: &[Instruction],
         compute_budget: ComputeBudget,
         skip_confirm: bool,
-        use_jito_tip: bool, // Novo parâmetro para decidir se usa o Jito tip
     ) -> ClientResult<Signature> {
         let signer = self.signer();
         let client = self.rpc_client.clone();
@@ -71,15 +70,13 @@ impl Miner {
             self.priority_fee.unwrap_or(0),
         ));
 
-        // Add Jito tip instruction if requested
-        if use_jito_tip {
-            let tip_instruction = system_instruction::transfer(
-                &fee_payer.pubkey(),
-                &"96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5".parse::<solana_sdk::pubkey::Pubkey>().unwrap(), // Endereço do Jito tip
-                JITO_TIP_LAMPORTS
-            );
-            final_ixs.push(tip_instruction);
-        }
+        // Add Jito tip instruction
+        let tip_instruction = system_instruction::transfer(
+            &fee_payer.pubkey(),
+            &"96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5".parse::<solana_sdk::pubkey::Pubkey>().unwrap(), // Endereço do Jito tip
+            JITO_TIP_LAMPORTS
+        );
+        final_ixs.push(tip_instruction);
 
         // Add in user instructions
         final_ixs.extend_from_slice(ixs);
