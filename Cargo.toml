@@ -48,8 +48,8 @@ url = "2.5"
 
 # [patch.crates-io]
 # drillx = { path = "../drillx/drillx" }
-coal-api = { git = "https://github.com/thithisd/coal-cli.git" }
-coal-utils = { git = "https://github.com/thithisd/coal-cli.git" }
+coal-api = { git = "https://github.com/Findiglay/coal.git" }
+coal-utils = { git = "https://github.com/Findiglay/coal.git" }
 # coal-api = { path = "../coal/api" }
 # coal-utils = { path = "../coal/utils" }
 
