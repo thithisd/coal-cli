@@ -10,7 +10,7 @@ use crate::{
     args::ClaimArgs,
     cu_limits::CU_LIMIT_CLAIM,
     send_and_confirm::ComputeBudget,
-    utils::{amount_f64_to_u64, ask_confirm, get_proof_with_authority},
+    utils::{ amount_f64_to_u64, ask_confirm, get_proof_with_authority },
     Miner,
 };
 
@@ -27,21 +27,16 @@ impl Miner {
                 let wallet = Pubkey::from_str(&to).expect("Failed to parse wallet address");
                 let benefiary_tokens = spl_associated_token_account::get_associated_token_address(
                     &wallet,
-                    &MINT_ADDRESS,
+                    &MINT_ADDRESS
                 );
-                if self
-                    .rpc_client
-                    .get_token_account(&benefiary_tokens)
-                    .await
-                    .is_err()
-                {
+                if self.rpc_client.get_token_account(&benefiary_tokens).await.is_err() {
                     ixs.push(
                         spl_associated_token_account::instruction::create_associated_token_account(
                             &pubkey,
                             &wallet,
                             &coal_api::consts::MINT_ADDRESS,
-                            &spl_token::id(),
-                        ),
+                            &spl_token::id()
+                        )
                     );
                 }
                 benefiary_tokens
@@ -56,25 +51,23 @@ impl Miner {
         };
 
         // Confirm user wants to claim
-        if !ask_confirm(
-            format!(
-                "\nYou are about to claim {}.\n\nAre you sure you want to continue? [Y/n]",
+        if
+            !ask_confirm(
                 format!(
-                    "{} COAL",
-                    amount_to_ui_amount(amount, coal_api::consts::TOKEN_DECIMALS)
-                )
-                .bold(),
+                    "\nYou are about to claim {}.\n\nAre you sure you want to continue? [Y/n]",
+                    format!(
+                        "{} COAL",
+                        amount_to_ui_amount(amount, coal_api::consts::TOKEN_DECIMALS)
+                    ).bold()
+                ).as_str()
             )
-            .as_str(),
-        ) {
+        {
             return;
         }
 
         // Send and confirm
         ixs.push(coal_api::instruction::claim(pubkey, beneficiary, amount));
-        self.send_and_confirm(&ixs, ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)
-            .await
-            .ok();
+        self.send_and_confirm(&ixs, ComputeBudget::Fixed(CU_LIMIT_CLAIM), false).await.ok();
     }
 
     async fn initialize_ata(&self, wallet: Pubkey) -> Pubkey {
@@ -85,7 +78,7 @@ impl Miner {
         // Build instructions.
         let token_account_pubkey = spl_associated_token_account::get_associated_token_address(
             &wallet,
-            &coal_api::consts::MINT_ADDRESS,
+            &coal_api::consts::MINT_ADDRESS
         );
 
         // Check if ata already exists
@@ -97,11 +90,9 @@ impl Miner {
             &signer.pubkey(),
             &signer.pubkey(),
             &coal_api::consts::MINT_ADDRESS,
-            &spl_token::id(),
+            &spl_token::id()
         );
-        self.send_and_confirm(&[ix], ComputeBudget::Dynamic, false)
-            .await
-            .ok();
+        self.send_and_confirm(&[ix], ComputeBudget::Dynamic, false).await.ok();
 
         // Return token account address
         token_account_pubkey
