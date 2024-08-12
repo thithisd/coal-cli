@@ -16,6 +16,7 @@ use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
     signature::{Signature, Signer},
     transaction::Transaction,
+    system_instruction,
 };
 use solana_transaction_status::{TransactionConfirmationStatus, UiTransactionEncoding};
 
@@ -31,6 +32,8 @@ const CONFIRM_RETRIES: usize = 8;
 const CONFIRM_DELAY: u64 = 500;
 const GATEWAY_DELAY: u64 = 0; //300;
 
+const JITO_TIP_LAMPORTS: u64 = 10_000; // 0.00001 SOL
+
 pub enum ComputeBudget {
     Dynamic,
     Fixed(u32),
@@ -42,6 +45,7 @@ impl Miner {
         ixs: &[Instruction],
         compute_budget: ComputeBudget,
         skip_confirm: bool,
+        use_jito_tip: bool, // Novo parâmetro para decidir se usa o Jito tip
     ) -> ClientResult<Signature> {
         let signer = self.signer();
         let client = self.rpc_client.clone();
@@ -66,6 +70,16 @@ impl Miner {
         final_ixs.push(ComputeBudgetInstruction::set_compute_unit_price(
             self.priority_fee.unwrap_or(0),
         ));
+
+        // Add Jito tip instruction if requested
+        if use_jito_tip {
+            let tip_instruction = system_instruction::transfer(
+                &fee_payer.pubkey(),
+                &"96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5".parse::<solana_sdk::pubkey::Pubkey>().unwrap(), // Endereço do Jito tip
+                JITO_TIP_LAMPORTS
+            );
+            final_ixs.push(tip_instruction);
+        }
 
         // Add in user instructions
         final_ixs.extend_from_slice(ixs);
@@ -228,7 +242,7 @@ impl Miner {
             }
         }
     }
-
+}
     // TODO
     fn _simulate(&self) {
 
